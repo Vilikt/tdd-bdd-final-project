@@ -158,14 +158,13 @@ class TestProductModel(unittest.TestCase):
         product.id = None
         product.create()
         self.assertIsNotNone(product.id)
-        
+
         products = Product.all()
         self.assertEqual(len(products), 1)
 
         # delete the product and make sure it isn't in the database
         product.delete()
         self.assertEqual(len(Product.all()), 0)
-
 
     def test_list_all_products(self):
         """It should List all Products in the database"""
