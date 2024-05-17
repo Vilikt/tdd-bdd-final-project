@@ -14,7 +14,7 @@
 # limitations under the License.
 ######################################################################
 """
-Product API Service Test Suite
+Product API Route Test Suite
 
 Test cases can be run with the following:
   nosetests -v --with-spec --spec-color
@@ -22,7 +22,7 @@ Test cases can be run with the following:
   codecov --token=$CODECOV_TOKEN
 
   While debugging just these tests it's convenient to use this:
-    nosetests --stop tests/test_service.py:TestProductService
+    nosetests --stop tests/test_route.py:TestProductRoute
 """
 import os
 import logging
@@ -49,7 +49,7 @@ BASE_URL = "/products"
 ######################################################################
 # pylint: disable=too-many-public-methods
 class TestProductRoutes(TestCase):
-    """Product Service tests"""
+    """Product Routes tests"""
 
     @classmethod
     def setUpClass(cls):
@@ -163,9 +163,21 @@ class TestProductRoutes(TestCase):
         response = self.client.post(BASE_URL, data={}, content_type="plain/text")
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    #
-    # ADD YOUR TEST CASES HERE
-    #
+    def test_get_product(self):
+        """It should Get a single Product"""
+        # get the id of a product
+        test_product = self._create_products(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], test_product.name)
+
+    def test_get_product_not_found(self):
+        """It should not Get a Product thats not found"""
+        response = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
 
     ######################################################################
     # Utility functions
