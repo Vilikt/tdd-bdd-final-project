@@ -247,18 +247,17 @@ class TestProductRoutes(TestCase):
         """It should Get a list of Products with specific Category"""
         products = self._create_products(10)
         cat = products[0].category
-        print("ICI: " + str(cat))
         count_same = len([product for product in products if product.category == cat])
 
         response = self.client.get(
             BASE_URL,
-            query_string=f"category={cat}"
+            query_string=f"category={cat.name}"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         products = response.get_json()
         self.assertEqual(len(products), count_same)
         for product in products:
-            self.assertEqual(product["category"], cat)
+            self.assertEqual(product["category"], cat.name)
 
     ######################################################################
     # Utility functions
