@@ -28,6 +28,7 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
+from urllib.parse import quote_plus
 from service import app
 from service.common import status
 from service.models import db, init_db, Product
@@ -205,8 +206,59 @@ class TestProductRoutes(TestCase):
         current_nbr_of_products = self.get_product_count()
         test_product = products[0]
 
-        response = self.client.delete
+        # delete the product
+        response = self.client.delete(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
 
+        # make sure the product is deleted
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        new_count = self.get_product_count()
+        self.assertEqual(new_count, current_nbr_of_products - 1)
+
+    def test_get_products_list(self):
+        """It should Get a list of Products"""
+        self._create_products(5)
+
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        products = response.get_json()
+        self.assertEqual(len(products), 5)
+
+    def test_get_products_by_name(self):
+        """It should Get a list of Products with specific name"""
+        products = self._create_products(5)
+        name = products[0].name
+        count_with_same_name = len([product for product in products if product.name == name])
+
+        response = self.client.get(
+            BASE_URL,
+            query_string=f"name={quote_plus(name)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), count_with_same_name)
+        for product in products:
+            self.assertEqual(product["name"], name)
+
+    def test_get_by_products_by_category(self):
+        """It should Get a list of Products with specific Category"""
+        products = self._create_products(10)
+        cat = products[0].category
+        print("ICI: " + str(cat))
+        count_same = len([product for product in products if product.category == cat])
+
+        response = self.client.get(
+            BASE_URL,
+            query_string=f"category={cat}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), count_same)
+        for product in products:
+            self.assertEqual(product["category"], cat)
 
     ######################################################################
     # Utility functions
