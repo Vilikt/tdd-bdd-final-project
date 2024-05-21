@@ -228,3 +228,26 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found.count(), count)
         for product in found:
             self.assertEqual(product.category, category)
+
+    def test_deserialize_product_with_bad_availability(self):
+        """It should raise en exception when deserialize product with bad availability"""
+        # create product dict with bad availability
+        product = ProductFactory()
+        product_dict = product.serialize()
+        product_dict["available"] = "foo"
+
+        self.assertRaises(DataValidationError, product.deserialize, product_dict)
+
+    def test_deserialize_product_with_no_price(self):
+        """It should raise an exception when deserialize product with no price"""
+        product = ProductFactory()
+        product_dict = product.serialize()
+        del(product_dict["price"])
+
+        self.assertRaises(DataValidationError, product.deserialize, product_dict)
+
+    def test_deserialize_product_with_no_data(self):
+        """It should raise an exception when deserialize product with no data"""
+        product = ProductFactory()
+
+        self.assertRaises(DataValidationError, product.deserialize, {})

@@ -131,19 +131,15 @@ class TestProductRoutes(TestCase):
         self.assertEqual(new_product["available"], test_product.available)
         self.assertEqual(new_product["category"], test_product.category.name)
 
-        #
-        # Uncomment this code once READ is implemented
-        #
-
-        # # Check that the location header was correct
-        # response = self.client.get(location)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # new_product = response.get_json()
-        # self.assertEqual(new_product["name"], test_product.name)
-        # self.assertEqual(new_product["description"], test_product.description)
-        # self.assertEqual(Decimal(new_product["price"]), test_product.price)
-        # self.assertEqual(new_product["available"], test_product.available)
-        # self.assertEqual(new_product["category"], test_product.category.name)
+        # Check that the location header was correct
+        response = self.client.get(location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_product = response.get_json()
+        self.assertEqual(new_product["name"], test_product.name)
+        self.assertEqual(new_product["description"], test_product.description)
+        self.assertEqual(Decimal(new_product["price"]), test_product.price)
+        self.assertEqual(new_product["available"], test_product.available)
+        self.assertEqual(new_product["category"], test_product.category.name)
 
     def test_create_product_with_no_name(self):
         """It should not Create a Product without a name"""
@@ -198,6 +194,13 @@ class TestProductRoutes(TestCase):
         updated_product = response.get_json()
         self.assertEqual(updated_product["description"], "unknown")
 
+    def test_update_product_not_found(self):
+        """It should not Update an unexisting Product"""
+        test_product = ProductFactory()
+        json_product_data = test_product.serialize()
+        response = self.client.put(f"{BASE_URL}/0", json=json_product_data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_delete_a_product(self):
         """It should Delete a Product"""
 
@@ -243,7 +246,7 @@ class TestProductRoutes(TestCase):
         for product in products:
             self.assertEqual(product["name"], name)
 
-    def test_get_by_products_by_category(self):
+    def test_get_products_by_category(self):
         """It should Get a list of Products with specific Category"""
         products = self._create_products(10)
         cat = products[0].category
@@ -258,6 +261,22 @@ class TestProductRoutes(TestCase):
         self.assertEqual(len(products), count_same)
         for product in products:
             self.assertEqual(product["category"], cat.name)
+
+    def test_get_products_by_availability(self):
+        """It should Query Products by availability"""
+        products = self._create_products(10)
+        available_products = [product for product in products if product.available]
+        available_count = len(available_products)
+
+        response = self.client.get(
+            BASE_URL, query_string="available=true"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), available_count)
+
+        for product in products:
+            self.assertEqual(product["available"], True)
 
     ######################################################################
     # Utility functions
