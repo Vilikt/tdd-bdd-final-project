@@ -242,7 +242,7 @@ class TestProductModel(unittest.TestCase):
         """It should raise an exception when deserialize product with no price"""
         product = ProductFactory()
         product_dict = product.serialize()
-        del(product_dict["price"])
+        del product_dict["price"]
 
         self.assertRaises(DataValidationError, product.deserialize, product_dict)
 
